@@ -1,8 +1,9 @@
 using Carter;
+using Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddCarter();
+builder.Services.AddCarterWithAssemblies(typeof(WorkflowModule).Assembly);
 
 builder.Services
     .AddWorkflowModule(builder.Configuration)

@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-	<Content Include="process-definitions\**\*.yaml" CopyToOutputDirectory="PreserveNewest" />
+	  <Content Include="..\process-definitions\**\*.yaml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
