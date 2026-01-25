@@ -1,4 +1,8 @@
+using Carter;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCarter();
 
 builder.Services
     .AddWorkflowModule(builder.Configuration)
@@ -6,9 +10,10 @@ builder.Services
 
 var app = builder.Build();
 
-app.MapGet("/", () => "Hello World!");
+app.MapCarter();
 
 app.UseWorkflowModule()
-   .UseKozterModule();
+    .UseKozterModule();
+app.MapWorkflowEndpoints();
 
 app.Run();

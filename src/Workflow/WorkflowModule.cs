@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Builder;              // IApplicationBuilder - Microsoft.AspNetCore
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;        // IConfiguration
-using Microsoft.Extensions.DependencyInjection;  // IServiceCollection
+using Microsoft.Extensions.DependencyInjection;
+using Workflow.Runtime;
+using Workflow.Storage;  // IServiceCollection
 
 namespace Workflow;
 
@@ -8,18 +11,11 @@ public static class WorkflowModule
 {
     public static IServiceCollection AddWorkflowModule(this IServiceCollection services, IConfiguration configuration)
     {
-        // Register all validators from this assembly (FluentValidation core / DI extensions)
-        //services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+        services.AddSingleton<InMemoryCaseStore>();
 
+        services.AddSingleton<IProcessDefinitionStore, FakeProcessDefinitionStore>();
 
-        // Add services to the container.
-
-        // Api Endpoint services
-
-        // Application Use Case services
-
-
-        // Data - Infrastructure services
+        services.AddSingleton<WorkflowEngine>();
 
         return services;
     }
@@ -35,5 +31,11 @@ public static class WorkflowModule
         // 3. Use Data - Infrastructure services
 
         return app;
+    }
+
+    public static IEndpointRouteBuilder MapWorkflowEndpoints(this IEndpointRouteBuilder endpoints)
+    {
+               // Map Workflow related endpoints here
+        return endpoints;
     }
 }

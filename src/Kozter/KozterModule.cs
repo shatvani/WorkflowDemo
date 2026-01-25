@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -35,6 +36,12 @@ public static class KozterModule
         // 3. Use Data - Infrastructure services
 
         return app;
+    }
+
+    public static IEndpointRouteBuilder MapKozterEndpoints(this IEndpointRouteBuilder endpoints)
+    {
+        // Map Workflow related endpoints here
+        return endpoints;
     }
 }
 
