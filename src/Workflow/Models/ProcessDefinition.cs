@@ -1,4 +1,6 @@
-﻿namespace Workflow.Models;
+﻿using Workflow.Runtime;
+
+namespace Workflow.Models;
 
 public sealed class ProcessDefinition
 {
@@ -14,12 +16,37 @@ public sealed class ProcessDefinition
             ? step
             : throw new InvalidOperationException($"Unknown step '{stepId}' in process '{Id}' v{Version}.");
 
-    public string ResolveNext(string fromStepId, string outcome)
+    public string ResolveNextByOutcome(string fromNodeId, string outcome)
     {
-        var next = Transitions.FirstOrDefault(t => t.From == fromStepId && t.On == outcome);
+        var next = Transitions.FirstOrDefault(t =>
+            string.Equals(t.From, fromNodeId, StringComparison.OrdinalIgnoreCase) &&
+            t.On is not null &&
+            string.Equals(t.On, outcome, StringComparison.OrdinalIgnoreCase));
+
         if (next is null)
-            throw new InvalidOperationException($"No transition from '{fromStepId}' on outcome '{outcome}' in process '{Id}' v{Version}.");
+            throw new InvalidOperationException(
+                $"No transition from '{fromNodeId}' on outcome '{outcome}' in process '{Id}' v{Version}.");
 
         return next.To;
+    }
+
+    public string ResolveNextByWhen(string fromNodeId, IReadOnlyDictionary<string, bool> variables)
+    {
+        var candidates = Transitions.Where(t =>
+            string.Equals(t.From, fromNodeId, StringComparison.OrdinalIgnoreCase) &&
+            t.When is not null).ToList();
+
+        if (candidates.Count == 0)
+            throw new InvalidOperationException(
+                $"No 'when' transitions from '{fromNodeId}' in process '{Id}' v{Version}.");
+
+        foreach (var t in candidates)
+        {
+            if (BooleanExpressionEvaluator.Eval(t.When!, variables))
+                return t.To;
+        }
+
+        throw new InvalidOperationException(
+            $"No 'when' condition matched from '{fromNodeId}' in process '{Id}' v{Version}'.");
     }
 }

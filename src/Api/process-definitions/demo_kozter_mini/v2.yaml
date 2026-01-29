@@ -1,0 +1,48 @@
+﻿id: demo_kozter_mini
+version: 2
+start:
+  stepId: step.capture
+
+steps:
+  - id: step.capture
+    taskType: "01"
+    outcomes: [ ok ]
+
+  - id: step.review
+    taskType: "08"
+    outcomes: [ ok, missing_info_needed, reject ]
+
+  - id: step.missing_info
+    taskType: "13"
+    outcomes: [ provided ]
+
+  - id: step.dispatch
+    taskType: "27"
+    outcomes: [ dispatched ]
+
+endStates: [ done, rejected ]
+
+transitions:
+  - from: step.capture
+    on: ok
+    to: step.review
+
+  - from: step.review
+    on: missing_info_needed
+    to: step.missing_info
+
+  - from: step.review
+    on: ok
+    to: step.dispatch
+
+  - from: step.review
+    on: reject
+    to: end:rejected
+
+  - from: step.missing_info
+    on: provided
+    to: step.review
+
+  - from: step.dispatch
+    on: dispatched
+    to: end:done

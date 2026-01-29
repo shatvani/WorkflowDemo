@@ -13,29 +13,14 @@ public static class WorkflowModule
     {
         services.AddSingleton<InMemoryCaseStore>();
 
-        services.AddSingleton<IProcessDefinitionStore, FakeProcessDefinitionStore>();
+        services.AddSingleton<IProcessDefinitionStore, YamlProcessDefinitionStore>();  //FakeProcessDefinitionStore
 
         services.AddSingleton<WorkflowEngine>();
 
         return services;
     }
 
-    public static IApplicationBuilder UseWorkflowModule(this IApplicationBuilder app)
-    {
-        // Configure the HTTP request pipeline.
+    public static IApplicationBuilder UseWorkflowModule(this IApplicationBuilder app) => app;
 
-        // 1. Use Api Endpoint services
-
-        // 2. Use Application Use Case services
-
-        // 3. Use Data - Infrastructure services
-
-        return app;
-    }
-
-    public static IEndpointRouteBuilder MapWorkflowEndpoints(this IEndpointRouteBuilder endpoints)
-    {
-               // Map Workflow related endpoints here
-        return endpoints;
-    }
+    public static IEndpointRouteBuilder MapWorkflowEndpoints(this IEndpointRouteBuilder endpoints) => endpoints;
 }

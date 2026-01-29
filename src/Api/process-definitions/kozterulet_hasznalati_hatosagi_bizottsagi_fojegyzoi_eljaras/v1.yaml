@@ -1,0 +1,356 @@
+id: kozterulet_hasznalati_hatosagi_bizottsagi_fojegyzoi_eljaras
+version: 1
+status: approved
+
+metadata:
+  officialName: "Közterület használati hatósági bizottsági-főjegyzői eljárás"
+  referenceName: "kozterulet_hasznalati_hatosagi_bizottsagi-fojegyzoi_eljaras"
+  category: "tamogatasi"
+  sla:
+    value: 60
+    unit: day
+  source: "3.2.4.1 Bizottsági_Főjegyzői eljárás folyamatábra (6 részlet)"
+
+# ---- Mapping (diagram -> task catalog) ----
+# 10 -> 01, 20 -> 04, 30 -> 08, 32 -> 11, 35 -> 12, 40 -> 13, 41 -> 16,
+# 50 -> 18, 60 -> 21, 65 -> 22, 70 -> 23, 80 -> 25, 81 -> 27, 90 -> 28, 95 -> 29
+
+start:
+  stepId: step.capture_application
+
+# Guard nodes = "gateway" (döntési pont) logika.
+# Ezek nem taskok, hanem a case adatából számolt döntések.
+guards:
+
+  suspend_check:
+    description: "Szüneteltetés kezelése (kérelem érkezett? feloldva?)"
+    decisions:
+      - key: suspension_request_received
+        type: boolean
+        question: "Szüneteltetési kérelem érkezett?"
+      - key: suspension_lifted
+        type: boolean
+        question: "Szüneteltetés feloldva?"
+
+  termination_check:
+    description: "Megszüntetés szükségességének vizsgálata"
+    decisions:
+      - key: termination_needed
+        type: boolean
+        question: "Eljárás megszüntetése szükséges?"
+
+  presentation_check_to_activation:
+    description: "Előterjesztés szükséges? (ha nem: döntés-előkészítésre megy)"
+    decisions:
+      - key: presentation_needed
+        type: boolean
+        question: "Előterjesztés szükséges?"
+
+  presentation_check_to_termination:
+    description: "Előterjesztés szükséges? (ha nem: megszüntetésre megy)"
+    decisions:
+      - key: presentation_needed
+        type: boolean
+        question: "Előterjesztés szükséges?"
+
+waitStates:
+  - suspended
+
+endStates:
+  - case_finished
+
+steps:
+
+  - id: step.capture_application
+    name: "Kérelem adatok rögzítése és vizsgálata"
+    taskType: "01"    # diagram: 10
+    outcomes:
+      - ok
+      - out_of_scope_not_owned_public_area
+      - competence_missing
+      - jurisdiction_missing
+      - suspend_requested
+
+  - id: step.transfer
+    name: "Áttétel"
+    taskType: "04"    # diagram: 20
+    outcomes: [ transferred ]
+
+  - id: step.substantive_review
+    name: "Kérelem érdemi vizsgálata"
+    taskType: "08"    # diagram: 30
+    outcomes:
+      - ok
+      - rejection_needed
+      - missing_info_needed
+      - suspensive_order_needed
+      - termination_needed
+      - presentation_needed
+      - suspend_requested
+
+  - id: step.reject_application
+    name: "Kérelem visszautasítása"
+    taskType: "11"    # diagram: 32
+    outcomes: [ rejected ]
+
+  - id: step.issue_suspensive_order
+    name: "Függő hatályú végzés kiadása"
+    taskType: "12"    # diagram: 35
+    outcomes: [ issued ]
+
+  - id: step.missing_info_request
+    name: "Hiánypótlás"
+    taskType: "13"    # diagram: 40
+    outcomes:
+      - requested
+      - suspend_requested
+
+  - id: step.evaluate_missing_info
+    name: "Hiánypótlás értékelése"
+    taskType: "16"    # diagram: 41
+    outcomes:
+      - completed_ok
+      - still_incomplete
+      - not_provided_in_time
+      - termination_needed
+      - presentation_needed
+      - suspend_requested
+
+  - id: step.submit_to_committee
+    name: "Munkacsoport-ra előterjesztés"
+    taskType: "18"    # diagram: 50
+    outcomes:
+      - submitted
+      - suspend_requested
+
+  - id: step.committee_meeting
+    name: "Munkacsoport ülés átvezetése"
+    taskType: "21"    # diagram: 60
+    outcomes:
+      - meeting_done
+      - postponed
+
+  - id: step.prepare_decision_activation
+    name: "Döntés aktiválás előkészítése"
+    taskType: "22"    # diagram: 65
+    outcomes:
+      - ready_to_activate
+      - terminate_case
+      - wait_for_payment
+      - wait_for_agreement_signature
+      - needs_committee_decision
+
+  - id: step.activate_decision
+    name: "Döntés aktiválása"
+    taskType: "23"    # diagram: 70
+    outcomes: [ activated ]
+
+  - id: step.terminate_case
+    name: "Eljárás megszüntetés - megszűnés"
+    taskType: "25"    # diagram: 80
+    outcomes: [ terminated ]
+
+  - id: step.dispatch_outgoing_document
+    name: "Kiküldött irat kezelése"
+    taskType: "27"    # diagram: 81
+    outcomes:
+      - dispatched
+      - appeal_arrived
+      - modification_requested
+
+  - id: step.start_modification
+    name: "Módosító eljárás indítása"
+    taskType: "28"    # diagram: 90
+    outcomes: [ started ]
+
+  - id: step.start_second_instance
+    name: "Másodfokú eljárás indítása"
+    taskType: "29"    # diagram: 95
+    outcomes: [ started ]
+
+transitions:
+
+  # --- Step 01 ---
+  - from: step.capture_application
+    on: out_of_scope_not_owned_public_area
+    to: step.transfer
+  - from: step.capture_application
+    on: competence_missing
+    to: step.transfer
+  - from: step.capture_application
+    on: jurisdiction_missing
+    to: step.transfer
+  - from: step.capture_application
+    on: suspend_requested
+    to: guard:suspend_check
+  - from: step.capture_application
+    on: ok
+    to: guard:suspend_check
+
+  # --- Guard suspend_check ---
+  - from: guard:suspend_check
+    when: "suspension_request_received == true && suspension_lifted == false"
+    to: wait:suspended
+    note: "CaseStatus=Suspended, stop-the-clock, aktív task nincs."
+  - from: wait:suspended
+    when: "suspension_lifted == true"
+    to: step.substantive_review
+  - from: guard:suspend_check
+    when: "suspension_request_received == false"
+    to: step.substantive_review
+
+  # --- Step 04 Transfer ---
+  - from: step.transfer
+    on: transferred
+    to: step.dispatch_outgoing_document
+
+  # --- Step 08 Substantive review ---
+  - from: step.substantive_review
+    on: rejection_needed
+    to: step.reject_application
+  - from: step.substantive_review
+    on: missing_info_needed
+    to: step.missing_info_request
+  - from: step.substantive_review
+    on: suspensive_order_needed
+    to: step.issue_suspensive_order
+  - from: step.substantive_review
+    on: termination_needed
+    to: step.terminate_case
+  - from: step.substantive_review
+    on: presentation_needed
+    to: step.submit_to_committee
+  - from: step.substantive_review
+    on: suspend_requested
+    to: guard:suspend_check
+  - from: step.substantive_review
+    on: ok
+    to: guard:termination_check
+
+  # --- Guard termination_check ---
+  - from: guard:termination_check
+    when: "termination_needed == true"
+    to: step.terminate_case
+  - from: guard:termination_check
+    when: "termination_needed == false"
+    to: guard:presentation_check_to_activation
+
+  # --- Guard presentation_check_to_activation ---
+  - from: guard:presentation_check_to_activation
+    when: "presentation_needed == true"
+    to: step.submit_to_committee
+  - from: guard:presentation_check_to_activation
+    when: "presentation_needed == false"
+    to: step.prepare_decision_activation
+
+  # --- Step 11 Reject ---
+  - from: step.reject_application
+    on: rejected
+    to: step.dispatch_outgoing_document
+
+  # --- Step 12 Suspensive order ---
+  - from: step.issue_suspensive_order
+    on: issued
+    to: guard:termination_check
+
+  # --- Step 13 Missing info ---
+  - from: step.missing_info_request
+    on: suspend_requested
+    to: guard:suspend_check
+  - from: step.missing_info_request
+    on: requested
+    to: step.evaluate_missing_info
+
+  # --- Step 16 Evaluate missing info ---
+  - from: step.evaluate_missing_info
+    on: still_incomplete
+    to: step.missing_info_request
+  - from: step.evaluate_missing_info
+    on: not_provided_in_time
+    to: step.terminate_case
+  - from: step.evaluate_missing_info
+    on: termination_needed
+    to: step.terminate_case
+  - from: step.evaluate_missing_info
+    on: presentation_needed
+    to: step.submit_to_committee
+  - from: step.evaluate_missing_info
+    on: suspend_requested
+    to: guard:suspend_check
+  - from: step.evaluate_missing_info
+    on: completed_ok
+    to: guard:termination_check
+
+  # --- Step 18 Submit to committee ---
+  - from: step.submit_to_committee
+    on: suspend_requested
+    to: guard:suspend_check
+  - from: step.submit_to_committee
+    on: submitted
+    to: step.committee_meeting
+
+  # --- Step 21 Committee meeting ---
+  - from: step.committee_meeting
+    on: postponed
+    to: step.submit_to_committee
+  - from: step.committee_meeting
+    on: meeting_done
+    to: step.prepare_decision_activation
+
+  # --- Step 22 Prepare decision activation ---
+  - from: step.prepare_decision_activation
+    on: needs_committee_decision
+    to: step.submit_to_committee
+
+  - from: step.prepare_decision_activation
+    on: terminate_case
+    to: step.terminate_case
+
+  - from: step.prepare_decision_activation
+    on: ready_to_activate
+    to: step.activate_decision
+
+  # >>> A TE SZABÁLYOD SZERINT (díjfizetés/aláírás) <<<
+  - from: step.prepare_decision_activation
+    on: wait_for_payment
+    to: guard:presentation_check_to_termination
+  - from: step.prepare_decision_activation
+    on: wait_for_agreement_signature
+    to: guard:presentation_check_to_termination
+
+  # --- Guard presentation_check_to_termination ---
+  - from: guard:presentation_check_to_termination
+    when: "presentation_needed == true"
+    to: step.submit_to_committee
+  - from: guard:presentation_check_to_termination
+    when: "presentation_needed == false"
+    to: step.terminate_case
+
+  # --- Step 23 Activate ---
+  - from: step.activate_decision
+    on: activated
+    to: step.dispatch_outgoing_document
+
+  # --- Step 25 Terminate ---
+  - from: step.terminate_case
+    on: terminated
+    to: step.dispatch_outgoing_document
+
+  # --- Step 27 Dispatch ---
+  - from: step.dispatch_outgoing_document
+    on: appeal_arrived
+    to: step.start_second_instance
+  - from: step.dispatch_outgoing_document
+    on: modification_requested
+    to: step.start_modification
+  - from: step.dispatch_outgoing_document
+    on: dispatched
+    to: end:case_finished
+
+  # --- Step 28/29 ---
+  - from: step.start_modification
+    on: started
+    to: end:case_finished
+  - from: step.start_second_instance
+    on: started
+    to: end:case_finished

@@ -9,10 +9,6 @@
   <Folder Name="/Modules/Workflow/">
     <Project Path="Workflow/Workflow.csproj" Id="47fdc7a3-1d87-4db2-8009-f8728f5a2a7b" />
   </Folder>
-  <Folder Name="/process-definitions/" />
-  <Folder Name="/process-definitions/demo/">
-    <File Path="v1.yaml" />
-  </Folder>
   <Folder Name="/Shared/">
     <Project Path="Shared/Shared.csproj" Id="e1bdf9c7-ae5c-4fad-8199-8b422db4678f" />
   </Folder>

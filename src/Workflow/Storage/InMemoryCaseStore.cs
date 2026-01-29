@@ -31,4 +31,15 @@ public sealed class InMemoryCaseStore
 
     public void UpdateTask(TaskInstance t) => _tasks[t.Id] = t;
     public void UpdateCase(CaseInstance c) => _cases[c.Id] = c;
+
+    public IEnumerable<TaskInstance> GetAllTasks(Guid caseId)
+    => _tasks.Values.Where(t => t.CaseId == caseId)
+                    .OrderBy(t => t.Status)
+                    .ThenBy(t => t.StepId);
+
+    public bool TryGetCase(Guid caseId, out CaseInstance? c)
+    => _cases.TryGetValue(caseId, out c);
+
+    public bool TryGetTask(Guid taskId, out TaskInstance? t)
+        => _tasks.TryGetValue(taskId, out t);
 }

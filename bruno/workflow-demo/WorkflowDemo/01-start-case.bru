@@ -1,0 +1,41 @@
+meta {
+  name: Start case
+  type: http
+  seq: 1
+}
+
+post {
+  url: https://localhost:5800/workflow/cases/start
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "processId": "demo_kozter_mini",
+    "version": 1
+  }
+}
+
+script:post-response {
+  bru.setVar("caseId", res.body.caseId);
+  bru.setVar("taskId", res.body.taskId);
+}
+
+docs {
+  Alap debug ciklus (MVP)
+  1. 01-start-case
+     * Post-script beállítja caseId + taskId
+  2. 02-get-case
+    * látod CurrentStepId, státusz
+  3. 03-get-case-tasks
+     * látod a task listát, melyik Open, melyik Completed
+  4. 04-complete-task (outcome változóval)
+     * Post-script frissítse taskId = nextTaskId ha van
+  5. 03-get-case-tasks újra
+     * ismét 4-5, amíg IsFinished=true
+}

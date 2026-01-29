@@ -8,15 +8,6 @@ namespace Workflow.Endpoints;
 
 public record CompleteTaskRequest(string Outcome);
 
-public record CompleteTaskResponse(
-    Guid CaseId,
-    string CaseStatus,
-    bool IsFinished,
-    Guid? NextTaskId,
-    string? NextTaskType,
-    string? NextStepId
-);
-
 public class CompleteTaskEndpoint : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
@@ -28,7 +19,7 @@ public class CompleteTaskEndpoint : ICarterModule
             return Results.Ok(result);
         })
         .WithName("CompleteTask")
-        .Produces<CompleteTaskResponse>(StatusCodes.Status201Created)
+        .Produces<CompleteTaskResponse>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .WithSummary("Complete task")
         .WithDescription("Complete task");

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -12,7 +12,11 @@
   </ItemGroup>
 
   <ItemGroup>
-	  <Content Include="..\process-definitions\**\*.yaml" CopyToOutputDirectory="PreserveNewest" />
+	  <Content Include="process-definitions\**\*.yaml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="process-definitions\kozterulet_hasznalati_hatosagi_bizottsagi_fojegyzoi_eljaras\" />
   </ItemGroup>
 
 </Project>

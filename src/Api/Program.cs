@@ -3,7 +3,10 @@ using Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddCarterWithAssemblies(typeof(WorkflowModule).Assembly);
+builder.Services.AddCarterWithAssemblies(
+    typeof(WorkflowModule).Assembly,
+    typeof(KozterModule).Assembly
+);
 
 builder.Services
     .AddWorkflowModule(builder.Configuration)
@@ -15,6 +18,5 @@ app.MapCarter();
 
 app.UseWorkflowModule()
     .UseKozterModule();
-app.MapWorkflowEndpoints();
 
 app.Run();

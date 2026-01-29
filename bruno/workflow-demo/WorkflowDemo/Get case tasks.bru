@@ -1,0 +1,11 @@
+meta {
+  name: Get case tasks
+  type: http
+  seq: 5
+}
+
+get {
+  url: https://localhost:5800/workflow/cases/{{caseId}}/tasks
+  body: none
+  auth: none
+}
